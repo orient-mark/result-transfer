@@ -1,0 +1,4 @@
+linter:
+  rules:
+    - avoid_print
+    - prefer_final_fields

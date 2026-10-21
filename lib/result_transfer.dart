@@ -16,7 +16,10 @@ class ResultDocument {
   final String surname;
   final int chip;
   final DateTime? start;
-  final DateTime finish;
+  final DateTime? finish;
+  final String? participantId;
+  final String patronymic;
+  final String birthDate;
   final List<ResultMark> marks;
 
   ResultDocument({
@@ -25,17 +28,23 @@ class ResultDocument {
     required this.chip,
     required this.start,
     required this.finish,
+    this.participantId,
+    this.patronymic = '',
+    this.birthDate = '',
     required Iterable<ResultMark> marks,
   }) : marks = List.unmodifiable(marks);
 
   Map<String, dynamic> toJson() => {
     'format': 'orientmark-result',
-    'version': 0,
+    'version': participantId == null ? 0 : 1,
+    'participant_id': participantId,
+    'patronymic': patronymic,
+    'birth_date': birthDate,
     'name': name,
     'surname': surname,
     'number_chip': chip,
     'start': start?.toUtc().toIso8601String(),
-    'finish': finish.toUtc().toIso8601String(),
+    'finish': finish?.toUtc().toIso8601String(),
     'count_cp': marks.length,
     'marks': [
       for (final mark in marks)
@@ -49,7 +58,7 @@ class ResultDocument {
     final json = jsonDecode(text);
     if (json is! Map<String, dynamic> ||
         json['format'] != 'orientmark-result' ||
-        json['version'] != 0 ||
+        ![0, 1].contains(json['version']) ||
         json['name'] is! String ||
         json['surname'] is! String ||
         json['number_chip'] is! int ||
@@ -57,6 +66,12 @@ class ResultDocument {
         json['count_cp'] is! int ||
         json['count_cp'] != (json['marks'] as List).length) {
       throw const FormatException('Неверный формат результата');
+    }
+    if (json['version'] == 1 &&
+        (json['participant_id'] is! String ||
+            json['birth_date'] is! String ||
+            json['patronymic'] is! String)) {
+      throw const FormatException('Неверная идентификация участника');
     }
     DateTime parseTime(dynamic value) {
       if (value is! String || !value.endsWith('Z')) {
@@ -81,7 +96,10 @@ class ResultDocument {
       surname: json['surname'],
       chip: json['number_chip'],
       start: json['start'] == null ? null : parseTime(json['start']),
-      finish: parseTime(json['finish']),
+      finish: json['finish'] == null ? null : parseTime(json['finish']),
+      participantId: json['participant_id'],
+      patronymic: json['patronymic'] ?? '',
+      birthDate: json['birth_date'] ?? '',
       marks: marks,
     );
   }

@@ -2,7 +2,7 @@ name: result_transfer
 description: Shared result document and animated QR transport for OrientMark.
 repository: https://github.com/orient-mark/result-transfer
 publish_to: none
-version: 1.0.0
+version: 2.0.0
 environment:
   sdk: ^3.13.0
 dependencies:
